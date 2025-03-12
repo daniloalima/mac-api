@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 import os
@@ -18,7 +18,8 @@ class Mesa(Base):
     dia = Column(String, nullable=False)
     horario = Column(String, nullable=False)
     image_url = Column(String, nullable=True)
-    sessoes_mes = Column(Integer, nullable=False)  # Nova coluna adicionada
+    sessoes_mes = Column(Integer, nullable=False)
+    mesa_especial = Column(Boolean, nullable=False, default=False)  # Nova coluna adicionada
 
 def _format_return(mesa):
     return {
@@ -31,7 +32,8 @@ def _format_return(mesa):
         "horario": mesa.horario,
         "vagas": mesa.vagas,
         "image_url": mesa.image_url,
-        "sessoes_mes": mesa.sessoes_mes  # Incluir a nova coluna no retorno
+        "sessoes_mes": mesa.sessoes_mes,
+        "mesa_especial": mesa.mesa_especial  # Incluir a nova coluna no retorno
     }
 
 def _get_engine():
@@ -46,9 +48,9 @@ def _get_session():
     Session = sessionmaker(bind=engine)
     return Session()
 
-def add_mesa(name, mestre, vagas, sistema, dia, horario, sessoes_mes, descricao=None, image_url=None):
+def add_mesa(name, mestre, vagas, sistema, dia, horario, sessoes_mes, descricao=None, image_url=None, mesa_especial=False):
     session = _get_session()
-    nova_mesa = Mesa(name=name, mestre=mestre, vagas=vagas, sistema=sistema, descricao=descricao, dia=dia, horario=horario, image_url=image_url, sessoes_mes=sessoes_mes)
+    nova_mesa = Mesa(name=name, mestre=mestre, vagas=vagas, sistema=sistema, descricao=descricao, dia=dia, horario=horario, image_url=image_url, sessoes_mes=sessoes_mes, mesa_especial=mesa_especial)
     session.add(nova_mesa)
     session.commit()
     session.refresh(nova_mesa)
@@ -107,6 +109,39 @@ def delete_mesa(id):
         return {"status": 200, "message": "Mesa deletada com sucesso"}
     session.close()
     return {"status": 404, "message": "Mesa não encontrada"}
+
+def update_mesa(id, name=None, mestre=None, vagas=None, sistema=None, dia=None, horario=None, sessoes_mes=None, descricao=None, image_url=None, mesa_especial=None):
+    session = _get_session()
+    mesa = session.query(Mesa).filter(Mesa.id == id).first()
+    if not mesa:
+        session.close()
+        return None
+
+    if name is not None:
+        mesa.name = name
+    if mestre is not None:
+        mesa.mestre = mestre
+    if vagas is not None:
+        mesa.vagas = vagas
+    if sistema is not None:
+        mesa.sistema = sistema
+    if dia is not None:
+        mesa.dia = dia
+    if horario is not None:
+        mesa.horario = horario
+    if sessoes_mes is not None:
+        mesa.sessoes_mes = sessoes_mes
+    if descricao is not None:
+        mesa.descricao = descricao
+    if image_url is not None:
+        mesa.image_url = image_url
+    if mesa_especial is not None:
+        mesa.mesa_especial = mesa_especial
+
+    session.commit()
+    session.refresh(mesa)
+    session.close()
+    return _format_return(mesa)
 
 if __name__ == "__main__":
     _create_database()
