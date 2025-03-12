@@ -77,6 +77,7 @@ def criar_mesa(payload: Mesa):
                               payload.sessoes_mes,
                               payload.descricao,
                               payload.image_url,
+                              payload.mesa_especial
                               )
         return {"status": 201, "message": "Mesa criada com sucesso", "mesa": mesa}
     except Exception as e:
