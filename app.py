@@ -1,7 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from db import mesas, users
-from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 import uvicorn
 
@@ -19,6 +18,19 @@ class Mesa(BaseModel):
     descricao: str = None
     image_url: str = None
     sessoes_mes: int
+    mesa_especial: bool = False
+
+class UpdateMesa(BaseModel):
+    name: str = None
+    mestre: str = None
+    vagas: int = None
+    sistema: str = None
+    dia: str = None
+    horario: str = None
+    sessoes_mes: int = None
+    descricao: str = None
+    image_url: str = None
+    mesa_especial: bool = None
 
 tags_metadata = [
     {
@@ -65,6 +77,7 @@ def criar_mesa(payload: Mesa):
                               payload.sessoes_mes,
                               payload.descricao,
                               payload.image_url,
+                              payload.mesa_especial
                               )
         return {"status": 201, "message": "Mesa criada com sucesso", "mesa": mesa}
     except Exception as e:
@@ -109,6 +122,25 @@ def adiciona_vaga_mesa(id: int):
         return {"status": 200, "message": "Vaga adicionada com sucesso", "mesa": mesa}
     except Exception as e:
         return {"status": 500, "message": str(e)}
+
+@app.post("/mesas/{id}", tags=["mesas"])
+def editar_mesa(id: int, payload: UpdateMesa):
+    updated_mesa = mesas.update_mesa(
+        id=id,
+        name=payload.name,
+        mestre=payload.mestre,
+        vagas=payload.vagas,
+        sistema=payload.sistema,
+        dia=payload.dia,
+        horario=payload.horario,
+        sessoes_mes=payload.sessoes_mes,
+        descricao=payload.descricao,
+        image_url=payload.image_url,
+        mesa_especial=payload.mesa_especial
+    )
+    if updated_mesa is None:
+        raise HTTPException(status_code=404, detail="Mesa não encontrada")
+    return {"status": 200, "message": "Mesa atualizada com sucesso", "mesa": updated_mesa}
 
 @app.delete("/mesas/{id}", tags=["mesas"])
 def deletar_mesa(id: int):
