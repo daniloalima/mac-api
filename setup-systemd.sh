@@ -22,7 +22,7 @@ Type=simple
 User=$USER
 WorkingDirectory=$PROJECT_DIR
 Environment=PATH=$PROJECT_DIR/venv/bin
-ExecStart=/usr/bin/python3 $PROJECT_DIR/app.py
+ExecStart=/usr/bin/python3 -m uvicorn app:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal
